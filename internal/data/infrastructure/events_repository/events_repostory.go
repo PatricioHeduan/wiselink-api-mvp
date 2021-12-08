@@ -15,9 +15,10 @@ type EventsRepository struct {
 type EventsRepositoryI interface {
 	FindLastId(ctx context.Context) int
 	CreateEvent(ctx context.Context, e events.Event) int
+	UpdateEvent(ctx context.Context, e events.Event) int
 }
 
-func (er EventsRepository) FindLastId(ctx context.Context) int {
+func (er *EventsRepository) FindLastId(ctx context.Context) int {
 	var e events.Event
 	eventsCollection := er.Client.Database("wsMVP").Collection("events")
 	fo := options.FindOne()
@@ -31,7 +32,7 @@ func (er EventsRepository) FindLastId(ctx context.Context) int {
 	}
 	return e.Id
 }
-func (er EventsRepository) CreateEvent(ctx context.Context, e events.Event) int {
+func (er *EventsRepository) CreateEvent(ctx context.Context, e events.Event) int {
 	eventsCollection := er.Client.Database("wsMVP").Collection("events")
 	_, err := eventsCollection.InsertOne(ctx, e)
 	if err != nil {
@@ -39,4 +40,17 @@ func (er EventsRepository) CreateEvent(ctx context.Context, e events.Event) int 
 	}
 	return events.Success
 
+}
+
+func (er *EventsRepository) UpdateEvent(ctx context.Context, e events.Event) int {
+	eventsCollection := er.Client.Database("wsMvp").Collection("events")
+	_, err := eventsCollection.UpdateOne(ctx, bson.M{"id": e.Id}, bson.M{"$set": e})
+	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return events.NotFound
+		} else {
+			return events.InternalError
+		}
+	}
+	return events.Success
 }
