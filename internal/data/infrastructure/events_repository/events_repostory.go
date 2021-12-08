@@ -6,9 +6,4 @@ type EventsRepository struct {
 	Client *mongo.Client
 }
 type EventsRepositoryI interface {
-	EmptyFunction() string
-}
-
-func (er *EventsRepository) EmptyFunction() string {
-	return "empty"
 }
