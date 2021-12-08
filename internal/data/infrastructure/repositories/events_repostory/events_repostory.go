@@ -2,8 +2,8 @@ package events_repository
 
 import "go.mongodb.org/mongo-driver/mongo"
 
-type Repository struct {
+type EventRepository struct {
 	Client *mongo.Client
 }
-type RepositoryI interface {
+type EventRepositoryI interface {
 }
