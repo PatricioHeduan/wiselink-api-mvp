@@ -1,7 +1,7 @@
 package events
 
 const (
-	Sucess = iota
+	Success = iota
 	InternalError
 	NotFound
 )

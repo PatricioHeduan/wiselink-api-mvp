@@ -1,1 +1,1 @@
-package events_repository
+package user_repository

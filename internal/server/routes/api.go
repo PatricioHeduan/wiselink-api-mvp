@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	clientOptions = options.Client().ApplyURI("STRING DE CONEXION")
+	clientOptions = options.Client().ApplyURI("mongodb+srv:Admin//:Admin123.@wsmvp.y72fa.mongodb.net/wsMVP?retryWrites=true&w=majority")
 	newClient, _  = mongo.Connect(context.TODO(), clientOptions)
 )
 

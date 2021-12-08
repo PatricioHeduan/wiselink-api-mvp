@@ -2,7 +2,7 @@ package events
 
 import "time"
 
-type Events struct {
+type Event struct {
 	Id        int       `json:"id" ,bson:"id"`
 	Title     string    `json:"title" ,bson:"title"`
 	ShortD    string    `json:"shortD" ,bson:"shortD"`
