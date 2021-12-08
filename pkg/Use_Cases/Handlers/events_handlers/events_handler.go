@@ -1,11 +1,11 @@
 package events_handler
 
 import (
-	"wiselink-api/data/internal/infrastructure/repositories/events_repository"
+	events_repository "wiselink/internal/data/infrastructure/events_repository"
 )
 
 type EventsHandler struct {
-	Repository events_repository.EventRepositoryI
+	Repository events_repository.EventsRepositoryI
 }
 type EventsHandlerI interface {
 }
