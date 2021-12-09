@@ -12,6 +12,7 @@ type EventsHandler struct {
 type EventsHandlerI interface {
 	CreateEvent(ctx context.Context, e events.Event) (events.Event, int)
 	UpdateEvent(ctx context.Context, e events.Event) int
+	DeleteEvent(ctx context.Context, id int) int
 }
 
 func (eh *EventsHandler) CreateEvent(ctx context.Context, e events.Event) (events.Event, int) {
@@ -22,6 +23,11 @@ func (eh *EventsHandler) CreateEvent(ctx context.Context, e events.Event) (event
 	}
 	return e, events.InternalError
 }
+
 func (eh *EventsHandler) UpdateEvent(ctx context.Context, e events.Event) int {
 	return eh.Repository.UpdateEvent(ctx, e)
+}
+
+func (eh *EventsHandler) DeleteEvent(ctx context.Context, id int) int {
+	return eh.Repository.DeleteEvent(ctx, id)
 }
