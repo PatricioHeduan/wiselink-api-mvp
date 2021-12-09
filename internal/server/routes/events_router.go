@@ -80,6 +80,8 @@ func (er *EventRouter) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400: Bad Request"))
 	}
+	defer r.Body.Close()
+	//Todo: check if the user is an administrator
 	switch er.Handler.DeleteEvent(ctx, id) {
 	case events.Success:
 		w.WriteHeader(http.StatusOK)
@@ -106,5 +108,6 @@ func (er *EventRouter) Routes() http.Handler {
 	r.Post("/creteEvent", er.CreateEvent)
 	r.Put("/updateEvent", er.UpdateEvent)
 	r.Delete("/deleteEvent", er.DeleteEvent)
+
 	return r
 }
