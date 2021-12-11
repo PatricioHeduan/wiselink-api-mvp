@@ -4,7 +4,9 @@ import (
 	"context"
 	"net/http"
 	events_repository "wiselink/internal/data/infrastructure/events_repository"
+	"wiselink/internal/data/infrastructure/user_repository"
 	events_handler "wiselink/pkg/Use_Cases/Handlers/events_handlers"
+	user_handler "wiselink/pkg/Use_Cases/Handlers/user_handlers"
 
 	"github.com/go-chi/chi"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,6 +27,15 @@ func New() http.Handler {
 			},
 		},
 	}
-	er.Routes()
+
+	ur := &UserRouter{
+		Handler: &user_handler.UserHandler{
+			Repository: &user_repository.UserRepository{
+				Client: newClient,
+			},
+		},
+	}
+	r.Mount("/events", er.Routes())
+	r.Mount("/users", ur.Routes())
 	return r
 }
