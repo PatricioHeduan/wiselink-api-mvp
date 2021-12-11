@@ -15,6 +15,7 @@ type UserHandlerI interface {
 	GetByEmail(ctx context.Context, email string) (int, user.User)
 	UserRegistration(ctx context.Context, u user.User) (int, user.User)
 	DeleteUser(ctx context.Context, email string) int
+	UpdateUser(ctx context.Context, u user.User) int
 }
 
 func (uh *UserHandler) GetByEmail(ctx context.Context, email string) (int, user.User) {
@@ -38,4 +39,8 @@ func (uh *UserHandler) UserRegistration(ctx context.Context, u user.User) (int, 
 
 func (uh *UserHandler) DeleteUser(ctx context.Context, email string) int {
 	return uh.Repository.DeleteUser(ctx, email)
+}
+
+func (uh *UserHandler) UpdateUser(ctx context.Context, u user.User) int {
+	return uh.Repository.UpdateUser(ctx, u)
 }

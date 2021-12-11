@@ -33,6 +33,7 @@ func (ur *UserRouter) UserRegistration(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("500: Internal Server Error"))
+				return
 			}
 			w.WriteHeader(http.StatusCreated)
 			w.Write(parsedUser)
@@ -56,18 +57,56 @@ func (ur *UserRouter) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if email == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400: Bad Request"))
+		return
 	}
 	//Todo: check if the user is an administrator
 	switch ur.Handler.DeleteUser(ctx, email) {
 	case user.Success:
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("200: OK"))
+		return
 	case user.NotFound:
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("404: Not Found"))
+		return
 	case user.InternalError:
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("500: Internal Server Error"))
+		return
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+		return
+	}
+}
+func (ur *UserRouter) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	var u user.User
+	ctx := r.Context()
+	err := json.NewDecoder(r.Body).Decode(&u)
+	defer r.Body.Close()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400: Bad Request"))
+		return
+	}
+	//Todo: check if the user is an administrator
+	switch ur.Handler.UpdateUser(ctx, u) {
+	case user.Success:
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("200: OK"))
+		return
+	case user.NotFound:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404: Not Found"))
+		return
+	case user.InternalError:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+		return
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+		return
 	}
 }
 func (ur *UserRouter) Routes() http.Handler {
