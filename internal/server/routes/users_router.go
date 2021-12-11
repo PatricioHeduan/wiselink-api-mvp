@@ -49,6 +49,27 @@ func (ur *UserRouter) UserRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (ur *UserRouter) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	email := r.URL.Query().Get("email")
+	defer r.Body.Close()
+	if email == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400: Bad Request"))
+	}
+	//Todo: check if the user is an administrator
+	switch ur.Handler.DeleteUser(ctx, email) {
+	case user.Success:
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("200: OK"))
+	case user.NotFound:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404: Not Found"))
+	case user.InternalError:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+	}
+}
 func (ur *UserRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 	return r

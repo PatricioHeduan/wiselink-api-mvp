@@ -14,6 +14,7 @@ type UserHandler struct {
 type UserHandlerI interface {
 	GetByEmail(ctx context.Context, email string) (int, user.User)
 	UserRegistration(ctx context.Context, u user.User) (int, user.User)
+	DeleteUser(ctx context.Context, email string) int
 }
 
 func (uh *UserHandler) GetByEmail(ctx context.Context, email string) (int, user.User) {
@@ -35,4 +36,6 @@ func (uh *UserHandler) UserRegistration(ctx context.Context, u user.User) (int, 
 	return status, u
 }
 
-// pass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+func (uh *UserHandler) DeleteUser(ctx context.Context, email string) int {
+	return uh.Repository.DeleteUser(ctx, email)
+}

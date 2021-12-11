@@ -17,6 +17,7 @@ type UserRepositoryI interface {
 	GetByEmail(ctx context.Context, email string) (int, user.User)
 	FindLastId(ctx context.Context) int
 	CreateUser(ctx context.Context, u user.User) int
+	DeleteUser(ctx context.Context, email string) int
 }
 
 func (ur *UserRepository) GetByEmail(ctx context.Context, email string) (int, user.User) {
@@ -48,12 +49,23 @@ func (ur *UserRepository) FindLastId(ctx context.Context) int {
 	}
 	return u.Id
 }
-func (er *UserRepository) CreateUser(ctx context.Context, u user.User) int {
-	usersCollection := er.Client.Database("wsMVP").Collection("users")
+func (ur *UserRepository) CreateUser(ctx context.Context, u user.User) int {
+	usersCollection := ur.Client.Database("wsMVP").Collection("users")
 	_, err := usersCollection.InsertOne(ctx, u)
 	if err != nil {
 		return events.InternalError
 	}
 	return events.Success
 
+}
+func (ur *UserRepository) DeleteUser(ctx context.Context, email string) int {
+	usersCollection := ur.Client.Database("wsMVP").Collection("users")
+	_, err := usersCollection.DeleteOne(ctx, bson.M{"email": email})
+	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return user.NotFound
+		}
+		return user.InternalError
+	}
+	return user.Success
 }
