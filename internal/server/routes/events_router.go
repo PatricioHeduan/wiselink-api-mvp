@@ -31,7 +31,7 @@ func (er *EventRouter) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		parsedEvent, err := json.Marshal(createdEvent)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("500: Internal Servcer Error"))
+			w.Write([]byte("500: Internal Server Error"))
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -39,7 +39,7 @@ func (er *EventRouter) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Servcer Error"))
+		w.Write([]byte("500: Internal Server Error"))
 		return
 	}
 }
@@ -65,11 +65,11 @@ func (er *EventRouter) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	case events.InternalError:
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Servcer Error"))
+		w.Write([]byte("500: Internal Server Error"))
 		return
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Servcer Error"))
+		w.Write([]byte("500: Internal Server Error"))
 		return
 	}
 }
@@ -93,11 +93,11 @@ func (er *EventRouter) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	case events.InternalError:
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Servcer Error"))
+		w.Write([]byte("500: Internal Server Error"))
 		return
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Servcer Error"))
+		w.Write([]byte("500: Internal Server Error"))
 		return
 	}
 }
