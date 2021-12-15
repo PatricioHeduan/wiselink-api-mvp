@@ -18,6 +18,9 @@ type UserHandlerI interface {
 	DeleteUser(ctx context.Context, email string) int
 	UpdateUser(ctx context.Context, u user.User) int
 	UserToAdmin(ctx context.Context, u user.User) int
+	AdminToUser(ctx context.Context, a user.Admin) int
+	GetAdminByEmail(ctx context.Context, email string) (int, user.Admin)
+	VerifyAdminExistance(ctx context.Context, accessToken string) int
 }
 
 func (uh *UserHandler) GetByEmail(ctx context.Context, email string) (int, user.User) {
@@ -56,4 +59,16 @@ func (uh *UserHandler) UserToAdmin(ctx context.Context, u user.User) int {
 		AccessToken: u.AccessToken,
 	}
 	return uh.Repository.AddAdmin(ctx, a)
+}
+
+func (uh *UserHandler) AdminToUser(ctx context.Context, a user.Admin) int {
+	return uh.Repository.DeleteAdmin(ctx, a)
+}
+
+func (uh *UserHandler) GetAdminByEmail(ctx context.Context, email string) (int, user.Admin) {
+	return uh.Repository.GetAdminByEmail(ctx, email)
+}
+
+func (uh *UserHandler) VerifyAdminExistance(ctx context.Context, accessToken string) int {
+	return uh.Repository.VerifyAdminExistance(ctx, accessToken)
 }

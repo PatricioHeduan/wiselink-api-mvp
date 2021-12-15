@@ -20,6 +20,10 @@ type UserRepositoryI interface {
 	DeleteUser(ctx context.Context, email string) int
 	UpdateUser(ctx context.Context, u user.User) int
 	GetLastAdminId(ctx context.Context) int
+	AddAdmin(ctx context.Context, a user.Admin) int
+	DeleteAdmin(ctx context.Context, a user.Admin) int
+	GetAdminByEmail(ctx context.Context, email string) (int, user.Admin)
+	VerifyAdminExistance(ctx context.Context, accessToken string) int
 }
 
 func (ur *UserRepository) GetByEmail(ctx context.Context, email string) (int, user.User) {
@@ -98,10 +102,48 @@ func (ur *UserRepository) GetLastAdminId(ctx context.Context) int {
 }
 
 func (ur *UserRepository) AddAdmin(ctx context.Context, a user.Admin) int {
-	adminsCollection := ur.Client.Database("wsMVP").Collection("admin")
+	adminsCollection := ur.Client.Database("wsMVP").Collection("admins")
 	_, err := adminsCollection.InsertOne(ctx, a)
 	if err != nil {
 		return events.InternalError
 	}
 	return events.Success
+}
+
+func (ur *UserRepository) DeleteAdmin(ctx context.Context, a user.Admin) int {
+	adminsCollection := ur.Client.Database("wsMVP").Collection("admins")
+	_, err := adminsCollection.DeleteOne(ctx, bson.M{"accessToken": a.AccessToken})
+	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return user.NotFound
+		}
+		return user.InternalError
+	}
+	return user.Success
+}
+
+func (ur *UserRepository) GetAdminByEmail(ctx context.Context, email string) (int, user.Admin) {
+	var a user.Admin
+	adminsCollection := ur.Client.Database("wsMVP").Collection("admins")
+	err := adminsCollection.FindOne(ctx, bson.M{"email": email}).Decode(&a)
+	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return user.NotFound, a
+		}
+		return user.InternalError, a
+	}
+	return user.Success, a
+}
+
+func (ur *UserRepository) VerifyAdminExistance(ctx context.Context, accessToken string) int {
+	var a user.Admin
+	adminsCollection := ur.Client.Database("wsMVP").Collection("admins")
+	err := adminsCollection.FindOne(ctx, bson.M{"access_token": accessToken}).Decode(&a)
+	if err != nil {
+		if err.Error() == "mongo: no documents in result set" {
+			return user.NotFound
+		}
+		return user.InternalError
+	}
+	return user.Success
 }

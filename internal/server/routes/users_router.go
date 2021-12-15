@@ -150,8 +150,55 @@ func (ur *UserRouter) UserToAdmin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (ur *UserRouter) AdminToUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	email := r.URL.Query().Get("email")
+	defer r.Body.Close()
+	if email == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400: Bad Request"))
+		return
+	}
+	status, adminToUser := ur.Handler.GetAdminByEmail(ctx, email)
+	switch status {
+	case user.Success:
+		switch ur.Handler.AdminToUser(ctx, adminToUser) {
+		case user.Success:
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("200: Success"))
+			return
+		case user.InternalError:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		}
+	case user.NotFound:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404: Not Found"))
+		return
+	case user.InternalError:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+		return
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+		return
+	}
+}
+
 func (ur *UserRouter) Routes() http.Handler {
 	r := chi.NewRouter()
+
+	r.Post("/", ur.UserRegistration)
+	r.Delete("/", ur.DeleteUser)
+	r.Put("/", ur.UpdateUser)
+	r.Put("/userToAdmin", ur.UserToAdmin)
+	r.Put("/adminToUser", ur.AdminToUser)
 
 	return r
 }
