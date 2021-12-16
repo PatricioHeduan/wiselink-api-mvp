@@ -191,10 +191,6 @@ func (ur *UserRouter) AdminToUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (ur *UserRouter) GetEvents(w http.ResponseWriter, r *http.Request) {
-
-}
-
 func (ur *UserRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 
@@ -203,7 +199,6 @@ func (ur *UserRouter) Routes() http.Handler {
 	r.Put("/", ur.UpdateUser)
 	r.Put("/userToAdmin", ur.UserToAdmin)
 	r.Put("/adminToUser", ur.AdminToUser)
-	r.Get("/", ur.GetEvents)
 
 	return r
 }
