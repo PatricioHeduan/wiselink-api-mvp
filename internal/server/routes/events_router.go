@@ -4,14 +4,23 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"wiselink/internal/data/infrastructure/user_repository"
 	"wiselink/pkg/Domain/events"
+	"wiselink/pkg/Domain/user"
 	events_handler "wiselink/pkg/Use_Cases/Handlers/events_handlers"
+	user_handler "wiselink/pkg/Use_Cases/Handlers/user_handlers"
 
 	"github.com/go-chi/chi"
 )
 
 type EventRouter struct {
 	Handler events_handler.EventsHandlerI
+}
+
+var uh = &user_handler.UserHandler{
+	Repository: &user_repository.UserRepository{
+		Client: newClient,
+	},
 }
 
 func (er *EventRouter) CreateEvent(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +52,7 @@ func (er *EventRouter) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
 func (er *EventRouter) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	var e events.Event
 	ctx := r.Context()
@@ -73,6 +83,7 @@ func (er *EventRouter) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
 func (er *EventRouter) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
@@ -100,6 +111,26 @@ func (er *EventRouter) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("500: Internal Server Error"))
 		return
 	}
+}
+
+func (er *EventRouter) GetAllEvents(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	defer r.Body.Close()
+	token := r.Header.Get("Authorization")
+	adminStatus := uh.VerifyAdminExistance(ctx, token)
+	switch adminStatus {
+	case user.Success:
+
+	case user.NotFound:
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("401: Unauthorized"))
+		return
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+		return
+	}
+
 }
 
 func (er *EventRouter) Routes() http.Handler {
