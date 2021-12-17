@@ -34,9 +34,8 @@ func (er *EventRouter) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("400:Bad Request"))
 		return
 	}
-	defer r.Body.Close()
 	//Todo: check if the user is an administrator
-	createdEvent, status := er.Handler.CreateEvent(ctx, e)
+	status, createdEvent := er.Handler.CreateEvent(ctx, e)
 	if status == events.Success {
 		parsedEvent, err := json.Marshal(createdEvent)
 		if err != nil {
@@ -122,7 +121,6 @@ func (er *EventRouter) GetEvents(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400: Bad Request"))
 	}
-	defer r.Body.Close()
 	defer r.Body.Close()
 	token := r.Header.Get("Authorization")
 	adminStatus := uh.VerifyAdminExistance(ctx, token)
