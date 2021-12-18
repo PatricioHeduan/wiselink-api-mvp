@@ -13,3 +13,4 @@ type Event struct {
 	Place     string    `json:"place" ,bson:"place"`
 	Status    bool      `json:"status" ,bson:"status"`
 }
+//a
