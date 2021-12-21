@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"wiselink/pkg/Domain/user"
 	user_handler "wiselink/pkg/Use_Cases/Handlers/user_handlers"
 
@@ -188,6 +189,30 @@ func (ur *UserRouter) AdminToUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("500: Internal Server Error"))
 		return
+	}
+}
+
+func (ur *UserRouter) UserInscription(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userId, err := strconv.Atoi(r.URL.Query().Get("userId"))
+	defer r.Body.Close()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400: Bad Request"))
+		return
+	}
+	//eventId := strconv.Atoi(r.URL.Query().Get("eventId"))
+	defer r.Body.Close()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400: Bad Request"))
+		return
+	}
+	defer r.Body.Close()
+	userStatus, _ := ur.Handler.GetById(ctx, userId)
+
+	switch userStatus {
+
 	}
 }
 

@@ -24,6 +24,7 @@ type UserHandlerI interface {
 	GetAdminByEmail(ctx context.Context, email string) (int, user.Admin)
 	VerifyAdminExistance(ctx context.Context, accessToken string) int
 	UserInscription(ctx context.Context, u user.User, e events.Event) int
+	GetById(ctx context.Context, id int) (int, user.User)
 }
 
 const (
@@ -98,4 +99,8 @@ func (uh *UserHandler) UserInscription(ctx context.Context, u user.User, e event
 	}
 	u.SuscriptedTo = append(u.SuscriptedTo, e.Id)
 	return uh.Repository.ModifyUserEvents(ctx, u)
+}
+
+func (uh *UserHandler) GetById(ctx context.Context, id int) (int, user.User) {
+	return uh.Repository.GetById(ctx, id)
 }

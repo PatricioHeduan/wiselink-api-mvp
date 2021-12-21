@@ -25,6 +25,7 @@ type UserRepositoryI interface {
 	GetAdminByEmail(ctx context.Context, email string) (int, user.Admin)
 	VerifyAdminExistance(ctx context.Context, accessToken string) int
 	ModifyUserEvents(ctx context.Context, u user.User) int
+	GetById(ctx context.Context, id int) (int, user.User)
 }
 
 func (ur *UserRepository) GetByEmail(ctx context.Context, email string) (int, user.User) {
@@ -159,4 +160,17 @@ func (ur *UserRepository) ModifyUserEvents(ctx context.Context, u user.User) int
 		return user.InternalError
 	}
 	return user.Success
+}
+
+func (ur *UserRepository) GetById(ctx context.Context, id int) (int, user.User) {
+	var u user.User
+	usersCollection := ur.Client.Database("wsMVP").Collection("users")
+	err := usersCollection.FindOne(ctx, bson.M{"Id": id}).Decode(&u)
+	if err != nil {
+		if err.Error() == "mongo: no documents in result set" {
+			return user.NotFound, u
+		}
+		return user.InternalError, u
+	}
+	return user.Success, u
 }
