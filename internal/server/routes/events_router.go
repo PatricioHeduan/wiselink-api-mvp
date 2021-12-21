@@ -2,12 +2,12 @@ package routes
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"wiselink/internal/data/infrastructure/user_repository"
 	"wiselink/pkg/Domain/events"
 	"wiselink/pkg/Domain/filters"
+	"wiselink/pkg/Domain/user"
 	events_handler "wiselink/pkg/Use_Cases/Handlers/events_handlers"
 	user_handler "wiselink/pkg/Use_Cases/Handlers/user_handlers"
 
@@ -114,31 +114,50 @@ func (er *EventRouter) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (er *EventRouter) GetEvents(w http.ResponseWriter, r *http.Request) {
-	//ctx := r.Context()
+	ctx := r.Context()
 	var f filters.Filter
 	err := json.NewDecoder(r.Body).Decode(&f)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400: Bad Request"))
 	}
-	log.Println(f)
-	/*
-		defer r.Body.Close()
-		token := r.Header.Get("Authorization")
-		adminStatus := uh.VerifyAdminExistance(ctx, token)
-		switch adminStatus {
-		case user.Success:
-
-		case user.NotFound:
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("401: Unauthorized"))
+	defer r.Body.Close()
+	token := r.Header.Get("Authorization")
+	adminStatus := uh.VerifyAdminExistance(ctx, token)
+	switch adminStatus {
+	case user.Success, user.NotFound:
+		var admin bool
+		if adminStatus == user.Success {
+			admin = true
+		} else {
+			admin = false
+		}
+		status, eventSlice := er.Handler.GetEvents(ctx, admin, f)
+		switch status {
+		case events.Success:
+			parsedEvents, err := json.Marshal(eventSlice)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500: Internal Server Error"))
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			w.Write(parsedEvents)
+			return
+		case events.NotFound:
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("404: Not Found"))
 			return
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("500: Internal Server Error"))
 			return
 		}
-	*/
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+		return
+	}
 }
 
 func (er *EventRouter) Routes() http.Handler {
