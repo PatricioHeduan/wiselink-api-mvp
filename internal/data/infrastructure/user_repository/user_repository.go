@@ -24,6 +24,7 @@ type UserRepositoryI interface {
 	DeleteAdmin(ctx context.Context, a user.Admin) int
 	GetAdminByEmail(ctx context.Context, email string) (int, user.Admin)
 	VerifyAdminExistance(ctx context.Context, accessToken string) int
+	ModifyUserEvents(ctx context.Context, u user.User) int
 }
 
 func (ur *UserRepository) GetByEmail(ctx context.Context, email string) (int, user.User) {
@@ -141,6 +142,18 @@ func (ur *UserRepository) VerifyAdminExistance(ctx context.Context, accessToken 
 	err := adminsCollection.FindOne(ctx, bson.M{"access_token": accessToken}).Decode(&a)
 	if err != nil {
 		if err.Error() == "mongo: no documents in result set" {
+			return user.NotFound
+		}
+		return user.InternalError
+	}
+	return user.Success
+}
+
+func (ur *UserRepository) ModifyUserEvents(ctx context.Context, u user.User) int {
+	usersCollection := ur.Client.Database("wsMVP").Collection("users")
+	_, err := usersCollection.UpdateOne(ctx, bson.M{"Id": u.Id}, bson.M{"suscriptedTo": u.SuscriptedTo})
+	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
 			return user.NotFound
 		}
 		return user.InternalError
