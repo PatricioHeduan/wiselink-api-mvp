@@ -2,12 +2,12 @@ package routes
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"wiselink/internal/data/infrastructure/user_repository"
 	"wiselink/pkg/Domain/events"
 	"wiselink/pkg/Domain/filters"
-	"wiselink/pkg/Domain/user"
 	events_handler "wiselink/pkg/Use_Cases/Handlers/events_handlers"
 	user_handler "wiselink/pkg/Use_Cases/Handlers/user_handlers"
 
@@ -35,7 +35,7 @@ func (er *EventRouter) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//Todo: check if the user is an administrator
-	status, createdEvent := er.Handler.CreateEvent(ctx, e)
+	createdEvent, status := er.Handler.CreateEvent(ctx, e)
 	if status == events.Success {
 		parsedEvent, err := json.Marshal(createdEvent)
 		if err != nil {
@@ -114,28 +114,31 @@ func (er *EventRouter) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (er *EventRouter) GetEvents(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	//ctx := r.Context()
 	var f filters.Filter
 	err := json.NewDecoder(r.Body).Decode(&f)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400: Bad Request"))
 	}
-	defer r.Body.Close()
-	token := r.Header.Get("Authorization")
-	adminStatus := uh.VerifyAdminExistance(ctx, token)
-	switch adminStatus {
-	case user.Success:
+	log.Println(f)
+	/*
+		defer r.Body.Close()
+		token := r.Header.Get("Authorization")
+		adminStatus := uh.VerifyAdminExistance(ctx, token)
+		switch adminStatus {
+		case user.Success:
 
-	case user.NotFound:
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("401: Unauthorized"))
-		return
-	default:
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Server Error"))
-		return
-	}
+		case user.NotFound:
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("401: Unauthorized"))
+			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		}
+	*/
 }
 
 func (er *EventRouter) Routes() http.Handler {
