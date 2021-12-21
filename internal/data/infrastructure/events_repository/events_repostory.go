@@ -17,7 +17,7 @@ type EventsRepositoryI interface {
 	CreateEvent(ctx context.Context, e events.Event) int
 	UpdateEvent(ctx context.Context, e events.Event) int
 	DeleteEvent(ctx context.Context, id int) int
-	GetEvents(ctx context.Context, admin bool) (int, []events.Event)
+	GetEvents(ctx context.Context) (int, []events.Event)
 }
 
 func (er *EventsRepository) FindLastId(ctx context.Context) int {
@@ -70,9 +70,9 @@ func (er *EventsRepository) DeleteEvent(ctx context.Context, id int) int {
 	return events.Success
 }
 
-func (er *EventsRepository) GetEvents(ctx context.Context, admin bool) (int, []events.Event) {
+func (er *EventsRepository) GetEvents(ctx context.Context) (int, []events.Event) {
 	eventsCollection := er.Client.Database("wsMVP").Collection("events")
-	result, err := eventsCollection.Find(ctx, nil)
+	result, err := eventsCollection.Find(ctx, bson.M{})
 	if err != nil {
 		if result == nil {
 			return events.NotFound, nil
