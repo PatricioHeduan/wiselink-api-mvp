@@ -16,7 +16,7 @@ type EventsHandlerI interface {
 	UpdateEvent(ctx context.Context, e events.Event) int
 	DeleteEvent(ctx context.Context, id int) int
 	GetEvents(ctx context.Context, admin bool, filter filters.Filter) (int, []events.Event)
-	GetById(ctx context.Context, id int) (int, events.Event)
+	GetEventById(ctx context.Context, id int) (int, events.Event)
 }
 
 func (eh *EventsHandler) CreateEvent(ctx context.Context, e events.Event) (events.Event, int) {
