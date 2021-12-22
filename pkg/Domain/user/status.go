@@ -4,4 +4,7 @@ const (
 	Success = iota
 	InternalError
 	NotFound
+	CantEnroll
+	EventNotPublished
+	AlreadyInscripted
 )

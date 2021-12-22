@@ -3,6 +3,7 @@ package events_repository
 import (
 	"context"
 	"wiselink/pkg/Domain/events"
+	"wiselink/pkg/Domain/user"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,6 +19,7 @@ type EventsRepositoryI interface {
 	UpdateEvent(ctx context.Context, e events.Event) int
 	DeleteEvent(ctx context.Context, id int) int
 	GetEvents(ctx context.Context) (int, []events.Event)
+	GetEventById(ctx context.Context, id int) (int, events.Event)
 }
 
 func (er *EventsRepository) FindLastId(ctx context.Context) int {
@@ -89,4 +91,17 @@ func (er *EventsRepository) GetEvents(ctx context.Context) (int, []events.Event)
 		eventSlice = append(eventSlice, e)
 	}
 	return events.Success, eventSlice
+}
+
+func (er *EventsRepository) GetEventById(ctx context.Context, id int) (int, events.Event) {
+	var e events.Event
+	eventsCollection := er.Client.Database("wsMVP").Collection("events")
+	err := eventsCollection.FindOne(ctx, bson.M{"Id": id}).Decode(&e)
+	if err != nil {
+		if err.Error() == "mongo: no documents in result set" {
+			return events.NotFound, e
+		}
+		return user.InternalError, e
+	}
+	return user.Success, e
 }

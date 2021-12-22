@@ -2,7 +2,9 @@ package user_handler
 
 import (
 	"context"
+	"time"
 	"wiselink/internal/data/infrastructure/user_repository"
+	"wiselink/pkg/Domain/events"
 	"wiselink/pkg/Domain/user"
 	helpers "wiselink/pkg/Use_Cases/Helpers"
 
@@ -21,7 +23,13 @@ type UserHandlerI interface {
 	AdminToUser(ctx context.Context, a user.Admin) int
 	GetAdminByEmail(ctx context.Context, email string) (int, user.Admin)
 	VerifyAdminExistance(ctx context.Context, accessToken string) int
+	UserInscription(ctx context.Context, u user.User, e events.Event) int
+	GetUserById(ctx context.Context, id int) (int, user.User)
 }
+
+const (
+	dateAndHourFormat = "02-01-2006 at 15:04"
+)
 
 func (uh *UserHandler) GetByEmail(ctx context.Context, email string) (int, user.User) {
 	return uh.Repository.GetByEmail(ctx, email)
@@ -71,4 +79,28 @@ func (uh *UserHandler) GetAdminByEmail(ctx context.Context, email string) (int, 
 
 func (uh *UserHandler) VerifyAdminExistance(ctx context.Context, accessToken string) int {
 	return uh.Repository.VerifyAdminExistance(ctx, accessToken)
+}
+
+func (uh *UserHandler) UserInscription(ctx context.Context, u user.User, e events.Event) int {
+	for _, id := range u.SuscriptedTo {
+		if id == e.Id {
+			return user.AlreadyInscripted
+		}
+	}
+	eventDateTime, err := time.Parse(dateAndHourFormat, e.Date+" at "+e.Hour)
+	if err != nil {
+		return user.InternalError
+	}
+	if eventDateTime.Before(time.Now()) {
+		return user.CantEnroll
+	}
+	if !e.Status {
+		return user.EventNotPublished
+	}
+	u.SuscriptedTo = append(u.SuscriptedTo, e.Id)
+	return uh.Repository.ModifyUserEvents(ctx, u)
+}
+
+func (uh *UserHandler) GetUserById(ctx context.Context, id int) (int, user.User) {
+	return uh.Repository.GetUserById(ctx, id)
 }
