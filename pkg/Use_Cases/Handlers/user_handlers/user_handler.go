@@ -17,8 +17,8 @@ type UserHandler struct {
 type UserHandlerI interface {
 	GetByEmail(ctx context.Context, email string) (int, user.User)
 	UserRegistration(ctx context.Context, u user.User) (int, user.User)
-	DeleteUser(ctx context.Context, email string) int
-	UpdateUser(ctx context.Context, u user.User) int
+	DeleteUser(ctx context.Context, id int) int
+	UpdateUser(ctx context.Context, u, foundUser user.User) int
 	UserToAdmin(ctx context.Context, u user.User) int
 	AdminToUser(ctx context.Context, a user.Admin) int
 	GetAdminByEmail(ctx context.Context, email string) (int, user.Admin)
@@ -41,7 +41,7 @@ func (uh *UserHandler) UserRegistration(ctx context.Context, u user.User) (int, 
 	if lastId == -1 {
 		return user.InternalError, u
 	}
-	pass, err := bcrypt.GenerateFromPassword([]byte(u.TemporaryPassword+u.Email), bcrypt.MaxCost)
+	pass, err := bcrypt.GenerateFromPassword([]byte(u.TemporaryPassword+u.Email), bcrypt.DefaultCost)
 	if err != nil {
 		return user.InternalError, u
 	}
@@ -52,12 +52,20 @@ func (uh *UserHandler) UserRegistration(ctx context.Context, u user.User) (int, 
 	return status, u
 }
 
-func (uh *UserHandler) DeleteUser(ctx context.Context, email string) int {
-	return uh.Repository.DeleteUser(ctx, email)
+func (uh *UserHandler) DeleteUser(ctx context.Context, id int) int {
+	return uh.Repository.DeleteUser(ctx, id)
 }
 
-func (uh *UserHandler) UpdateUser(ctx context.Context, u user.User) int {
-	return uh.Repository.UpdateUser(ctx, u)
+func (uh *UserHandler) UpdateUser(ctx context.Context, u, foundUser user.User) int {
+	token := foundUser.AccessToken
+	if u.TemporaryPassword != "" {
+		byteToken, err := bcrypt.GenerateFromPassword([]byte(foundUser.TemporaryPassword+u.Email), bcrypt.DefaultCost)
+		if err != nil {
+			return user.InternalError
+		}
+		token = string(byteToken)
+	}
+	return uh.Repository.UpdateUser(ctx, u, token)
 }
 
 func (uh *UserHandler) UserToAdmin(ctx context.Context, u user.User) int {
