@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	clientOptions = options.Client().ApplyURI("mongodb+srv:Admin//:Admin123.@wsmvp.y72fa.mongodb.net/wsMVP?retryWrites=true&w=majority")
+	clientOptions = options.Client().ApplyURI("mongodb+srv://admin:12345@wiselink-mvp.u0dgh.mongodb.net/wlMVP?retryWrites=true&w=majority")
 	newClient, _  = mongo.Connect(context.TODO(), clientOptions)
 )
 

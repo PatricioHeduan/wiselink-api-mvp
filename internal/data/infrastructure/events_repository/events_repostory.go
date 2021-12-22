@@ -24,10 +24,11 @@ type EventsRepositoryI interface {
 
 func (er *EventsRepository) FindLastId(ctx context.Context) int {
 	var e events.Event
-	eventsCollection := er.Client.Database("wsMVP").Collection("events")
+	eventsCollection := er.Client.Database("wlMVP").Collection("events")
 	fo := options.FindOne()
 	fo.SetSort(bson.D{{"$natural", -1}})
-	err := eventsCollection.FindOne(ctx, nil, fo).Decode(&e)
+	result := eventsCollection.FindOne(ctx, bson.D{}, fo)
+	err := result.Decode(&e)
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			return 0
@@ -37,7 +38,7 @@ func (er *EventsRepository) FindLastId(ctx context.Context) int {
 	return e.Id
 }
 func (er *EventsRepository) CreateEvent(ctx context.Context, e events.Event) int {
-	eventsCollection := er.Client.Database("wsMVP").Collection("events")
+	eventsCollection := er.Client.Database("wlMVP").Collection("events")
 	_, err := eventsCollection.InsertOne(ctx, e)
 	if err != nil {
 		return events.InternalError
@@ -47,7 +48,7 @@ func (er *EventsRepository) CreateEvent(ctx context.Context, e events.Event) int
 }
 
 func (er *EventsRepository) UpdateEvent(ctx context.Context, e events.Event) int {
-	eventsCollection := er.Client.Database("wsMVP").Collection("events")
+	eventsCollection := er.Client.Database("wlMVP").Collection("events")
 	_, err := eventsCollection.UpdateOne(ctx, bson.M{"id": e.Id}, bson.M{"$set": e})
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
@@ -60,7 +61,7 @@ func (er *EventsRepository) UpdateEvent(ctx context.Context, e events.Event) int
 }
 
 func (er *EventsRepository) DeleteEvent(ctx context.Context, id int) int {
-	eventsCollection := er.Client.Database("wsMVP").Collection("events")
+	eventsCollection := er.Client.Database("wlMVP").Collection("events")
 	_, err := eventsCollection.DeleteOne(ctx, bson.M{"id": id})
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
@@ -73,7 +74,7 @@ func (er *EventsRepository) DeleteEvent(ctx context.Context, id int) int {
 }
 
 func (er *EventsRepository) GetEvents(ctx context.Context) (int, []events.Event) {
-	eventsCollection := er.Client.Database("wsMVP").Collection("events")
+	eventsCollection := er.Client.Database("wlMVP").Collection("events")
 	result, err := eventsCollection.Find(ctx, bson.M{})
 	if err != nil {
 		if result == nil {
@@ -95,7 +96,7 @@ func (er *EventsRepository) GetEvents(ctx context.Context) (int, []events.Event)
 
 func (er *EventsRepository) GetEventById(ctx context.Context, id int) (int, events.Event) {
 	var e events.Event
-	eventsCollection := er.Client.Database("wsMVP").Collection("events")
+	eventsCollection := er.Client.Database("wlMVP").Collection("events")
 	err := eventsCollection.FindOne(ctx, bson.M{"Id": id}).Decode(&e)
 	if err != nil {
 		if err.Error() == "mongo: no documents in result set" {
