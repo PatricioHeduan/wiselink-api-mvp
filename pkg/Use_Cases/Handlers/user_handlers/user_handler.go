@@ -25,6 +25,7 @@ type UserHandlerI interface {
 	VerifyAdminExistance(ctx context.Context, accessToken string) int
 	UserInscription(ctx context.Context, u user.User, e events.Event) int
 	GetUserById(ctx context.Context, id int) (int, user.User)
+	LoginUser(ctx context.Context, u user.User, token string) int
 }
 
 const (
@@ -103,4 +104,15 @@ func (uh *UserHandler) UserInscription(ctx context.Context, u user.User, e event
 
 func (uh *UserHandler) GetUserById(ctx context.Context, id int) (int, user.User) {
 	return uh.Repository.GetUserById(ctx, id)
+}
+
+func (uh *UserHandler) LoginUser(ctx context.Context, u user.User, token string) int {
+	err := bcrypt.CompareHashAndPassword([]byte(token), []byte(u.TemporaryPassword+u.Email))
+	if err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			return user.IncorectPassword
+		}
+		return user.InternalError
+	}
+	return user.Success
 }

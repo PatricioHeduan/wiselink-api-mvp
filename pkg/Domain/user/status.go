@@ -7,4 +7,5 @@ const (
 	CantEnroll
 	EventNotPublished
 	AlreadyInscripted
+	IncorectPassword
 )
