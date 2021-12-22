@@ -120,6 +120,7 @@ func (er *EventRouter) GetEvents(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400: Bad Request"))
+		return
 	}
 	defer r.Body.Close()
 	token := r.Header.Get("Authorization")
@@ -164,9 +165,12 @@ func (er *EventRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 
 	r.Post("/creteEvent", er.CreateEvent)
+
 	r.Put("/updateEvent", er.UpdateEvent)
+
 	r.Delete("/deleteEvent", er.DeleteEvent)
-	r.Get("/", er.GetEvents)
+
+	r.Get("/getAllEvents", er.GetEvents)
 
 	return r
 }
