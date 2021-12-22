@@ -216,7 +216,7 @@ func (ur *UserRouter) UserInscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	userStatus, userFound := ur.Handler.GetById(ctx, userId)
+	userStatus, userFound := ur.Handler.GetUserById(ctx, userId)
 	switch userStatus {
 	case user.Success:
 		eventStatus, eventFound := eh.GetEventById(ctx, eventId)
@@ -277,6 +277,7 @@ func (ur *UserRouter) Routes() http.Handler {
 	r.Put("/", ur.UpdateUser)
 	r.Put("/userToAdmin", ur.UserToAdmin)
 	r.Put("/adminToUser", ur.AdminToUser)
+	r.Put("/userInscription", ur.UserInscription)
 
 	return r
 }
