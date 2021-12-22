@@ -85,7 +85,7 @@ func (er *EventsRepository) GetEvents(ctx context.Context) (int, []events.Event)
 	var eventSlice []events.Event
 	for result.Next(ctx) {
 		var e events.Event
-		err = result.Decode(e)
+		err = result.Decode(&e)
 		if err != nil {
 			return events.InternalError, nil
 		}
