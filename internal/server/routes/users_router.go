@@ -321,7 +321,7 @@ func (ur *UserRouter) LoginUser(w http.ResponseWriter, r *http.Request) {
 func (ur *UserRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 
-	r.Post("/", ur.UserRegistration)
+	r.Post("/registUser", ur.UserRegistration)
 	r.Delete("/", ur.DeleteUser)
 	r.Put("/", ur.UpdateUser)
 	r.Put("/userToAdmin", ur.UserToAdmin)
