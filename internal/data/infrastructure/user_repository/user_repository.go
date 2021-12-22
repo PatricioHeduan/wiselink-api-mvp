@@ -30,7 +30,7 @@ type UserRepositoryI interface {
 
 func (ur *UserRepository) GetByEmail(ctx context.Context, email string) (int, user.User) {
 	var u user.User
-	usersCollection := ur.Client.Database("wsMVP").Collection("users")
+	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	err := usersCollection.FindOne(ctx, bson.M{"email": email}).Decode(&u)
 	if err != nil {
 		// error when no matching document is found
@@ -45,7 +45,7 @@ func (ur *UserRepository) GetByEmail(ctx context.Context, email string) (int, us
 }
 func (ur *UserRepository) FindUserLastId(ctx context.Context) int {
 	var u user.User
-	eventsCollection := ur.Client.Database("wsMVP").Collection("users")
+	eventsCollection := ur.Client.Database("wlMVP").Collection("users")
 	fo := options.FindOne()
 	fo.SetSort(bson.D{{"$natural", -1}})
 	err := eventsCollection.FindOne(ctx, nil, fo).Decode(&u)
@@ -58,7 +58,7 @@ func (ur *UserRepository) FindUserLastId(ctx context.Context) int {
 	return u.Id
 }
 func (ur *UserRepository) CreateUser(ctx context.Context, u user.User) int {
-	usersCollection := ur.Client.Database("wsMVP").Collection("users")
+	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	_, err := usersCollection.InsertOne(ctx, u)
 	if err != nil {
 		return events.InternalError
@@ -66,7 +66,7 @@ func (ur *UserRepository) CreateUser(ctx context.Context, u user.User) int {
 	return events.Success
 }
 func (ur *UserRepository) DeleteUser(ctx context.Context, email string) int {
-	usersCollection := ur.Client.Database("wsMVP").Collection("users")
+	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	_, err := usersCollection.DeleteOne(ctx, bson.M{"email": email})
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
@@ -77,7 +77,7 @@ func (ur *UserRepository) DeleteUser(ctx context.Context, email string) int {
 	return user.Success
 }
 func (ur *UserRepository) UpdateUser(ctx context.Context, u user.User) int {
-	usersCollection := ur.Client.Database("wsMVP").Collection("users")
+	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	_, err := usersCollection.UpdateOne(ctx, bson.M{"Id": u.Id}, bson.M{"$set": u})
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
@@ -90,7 +90,7 @@ func (ur *UserRepository) UpdateUser(ctx context.Context, u user.User) int {
 
 func (ur *UserRepository) GetLastAdminId(ctx context.Context) int {
 	var a user.Admin
-	eventsCollection := ur.Client.Database("wsMVP").Collection("Admins")
+	eventsCollection := ur.Client.Database("wlMVP").Collection("Admins")
 	fo := options.FindOne()
 	fo.SetSort(bson.D{{"$natural", -1}})
 	err := eventsCollection.FindOne(ctx, nil, fo).Decode(&a)
@@ -104,7 +104,7 @@ func (ur *UserRepository) GetLastAdminId(ctx context.Context) int {
 }
 
 func (ur *UserRepository) AddAdmin(ctx context.Context, a user.Admin) int {
-	adminsCollection := ur.Client.Database("wsMVP").Collection("admins")
+	adminsCollection := ur.Client.Database("wlMVP").Collection("admins")
 	_, err := adminsCollection.InsertOne(ctx, a)
 	if err != nil {
 		return events.InternalError
@@ -113,7 +113,7 @@ func (ur *UserRepository) AddAdmin(ctx context.Context, a user.Admin) int {
 }
 
 func (ur *UserRepository) DeleteAdmin(ctx context.Context, a user.Admin) int {
-	adminsCollection := ur.Client.Database("wsMVP").Collection("admins")
+	adminsCollection := ur.Client.Database("wlMVP").Collection("admins")
 	_, err := adminsCollection.DeleteOne(ctx, bson.M{"accessToken": a.AccessToken})
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
@@ -126,7 +126,7 @@ func (ur *UserRepository) DeleteAdmin(ctx context.Context, a user.Admin) int {
 
 func (ur *UserRepository) GetAdminByEmail(ctx context.Context, email string) (int, user.Admin) {
 	var a user.Admin
-	adminsCollection := ur.Client.Database("wsMVP").Collection("admins")
+	adminsCollection := ur.Client.Database("wlMVP").Collection("admins")
 	err := adminsCollection.FindOne(ctx, bson.M{"email": email}).Decode(&a)
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
@@ -139,7 +139,7 @@ func (ur *UserRepository) GetAdminByEmail(ctx context.Context, email string) (in
 
 func (ur *UserRepository) VerifyAdminExistance(ctx context.Context, accessToken string) int {
 	var a user.Admin
-	adminsCollection := ur.Client.Database("wsMVP").Collection("admins")
+	adminsCollection := ur.Client.Database("wlMVP").Collection("admins")
 	err := adminsCollection.FindOne(ctx, bson.M{"access_token": accessToken}).Decode(&a)
 	if err != nil {
 		if err.Error() == "mongo: no documents in result set" {
@@ -151,7 +151,7 @@ func (ur *UserRepository) VerifyAdminExistance(ctx context.Context, accessToken 
 }
 
 func (ur *UserRepository) ModifyUserEvents(ctx context.Context, u user.User) int {
-	usersCollection := ur.Client.Database("wsMVP").Collection("users")
+	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	_, err := usersCollection.UpdateOne(ctx, bson.M{"Id": u.Id}, bson.M{"suscriptedTo": u.SuscriptedTo})
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
@@ -164,7 +164,7 @@ func (ur *UserRepository) ModifyUserEvents(ctx context.Context, u user.User) int
 
 func (ur *UserRepository) GetUserById(ctx context.Context, id int) (int, user.User) {
 	var u user.User
-	usersCollection := ur.Client.Database("wsMVP").Collection("users")
+	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	err := usersCollection.FindOne(ctx, bson.M{"Id": id}).Decode(&u)
 	if err != nil {
 		if err.Error() == "mongo: no documents in result set" {
