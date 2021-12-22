@@ -101,6 +101,6 @@ func (uh *UserHandler) UserInscription(ctx context.Context, u user.User, e event
 	return uh.Repository.ModifyUserEvents(ctx, u)
 }
 
-func (uh *UserHandler) GetById(ctx context.Context, id int) (int, user.User) {
-	return uh.Repository.GetById(ctx, id)
+func (uh *UserHandler) GetUserById(ctx context.Context, id int) (int, user.User) {
+	return uh.Repository.GetUserById(ctx, id)
 }

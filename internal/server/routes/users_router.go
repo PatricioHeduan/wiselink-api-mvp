@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	events_repository "wiselink/internal/data/infrastructure/events_repository"
+	"wiselink/pkg/Domain/events"
 	"wiselink/pkg/Domain/user"
+	events_handler "wiselink/pkg/Use_Cases/Handlers/events_handlers"
 	user_handler "wiselink/pkg/Use_Cases/Handlers/user_handlers"
 
 	"github.com/go-chi/chi"
@@ -12,6 +15,12 @@ import (
 
 type UserRouter struct {
 	Handler user_handler.UserHandlerI
+}
+
+var eh = &events_handler.EventsHandler{
+	Repository: &events_repository.EventsRepository{
+		Client: newClient,
+	},
 }
 
 func (ur *UserRouter) UserRegistration(w http.ResponseWriter, r *http.Request) {
@@ -195,24 +204,68 @@ func (ur *UserRouter) AdminToUser(w http.ResponseWriter, r *http.Request) {
 func (ur *UserRouter) UserInscription(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId, err := strconv.Atoi(r.URL.Query().Get("userId"))
-	defer r.Body.Close()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400: Bad Request"))
 		return
 	}
-	//eventId := strconv.Atoi(r.URL.Query().Get("eventId"))
-	defer r.Body.Close()
+	eventId, err := strconv.Atoi(r.URL.Query().Get("eventId"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400: Bad Request"))
 		return
 	}
 	defer r.Body.Close()
-	userStatus, _ := ur.Handler.GetById(ctx, userId)
-
+	userStatus, userFound := ur.Handler.GetById(ctx, userId)
 	switch userStatus {
-
+	case user.Success:
+		eventStatus, eventFound := eh.GetEventById(ctx, eventId)
+		switch eventStatus {
+		case events.Success:
+			status := ur.Handler.UserInscription(ctx, userFound, eventFound)
+			switch status {
+			case user.Success:
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("200: OK"))
+				return
+			case user.NotFound:
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte("404: User Not Found"))
+				return
+			case user.EventNotPublished:
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("401: Unauthorized event not published"))
+				return
+			case user.CantEnroll:
+				w.WriteHeader(http.StatusConflict)
+				w.Write([]byte("409: Conflict"))
+				return
+			case user.AlreadyInscripted:
+				w.WriteHeader(http.StatusAlreadyReported)
+				w.Write([]byte("208: AlreadyInscripted"))
+				return
+			default:
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500: Internal Server Error"))
+				return
+			}
+		case events.NotFound:
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("404: User Not Found"))
+			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		}
+	case user.NotFound:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404: User Not Found"))
+		return
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+		return
 	}
 }
 
