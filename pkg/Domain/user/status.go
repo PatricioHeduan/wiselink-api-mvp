@@ -8,4 +8,5 @@ const (
 	EventNotPublished
 	AlreadyInscripted
 	IncorectPassword
+	NotSuscripted
 )

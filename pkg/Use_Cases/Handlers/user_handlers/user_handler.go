@@ -26,6 +26,7 @@ type UserHandlerI interface {
 	UserInscription(ctx context.Context, u user.User, e events.Event) int
 	GetUserById(ctx context.Context, id int) (int, user.User)
 	LoginUser(ctx context.Context, u user.User, token string) int
+	UserUnsubscribe(ctx context.Context, u user.User, e events.Event) int
 }
 
 const (
@@ -126,4 +127,19 @@ func (uh *UserHandler) LoginUser(ctx context.Context, u user.User, token string)
 		return user.InternalError
 	}
 	return user.Success
+}
+
+func (uh *UserHandler) UserUnsubscribe(ctx context.Context, u user.User, e events.Event) int {
+	found := -1
+	for i, id := range u.SuscriptedTo {
+		if id == e.Id {
+			found = i
+			break
+		}
+	}
+	if found == -1 {
+		return user.NotSuscripted
+	}
+	u.SuscriptedTo = append(u.SuscriptedTo[:found], u.SuscriptedTo[found+1:]...)
+	return uh.Repository.ModifyUserEvents(ctx, u)
 }
