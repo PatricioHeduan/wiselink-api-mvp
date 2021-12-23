@@ -287,7 +287,67 @@ func (ur *UserRouter) UserInscription(w http.ResponseWriter, r *http.Request) {
 			}
 		case events.NotFound:
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("404: User Not Found"))
+			w.Write([]byte("404: Event Not Found"))
+			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		}
+	case user.NotFound:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404: User Not Found"))
+		return
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+		return
+	}
+}
+
+func (ur *UserRouter) UserUnsubscribe(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userId, err := strconv.Atoi(r.URL.Query().Get("userId"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400: Bad Request"))
+		return
+	}
+	eventId, err := strconv.Atoi(r.URL.Query().Get("eventId"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400: Bad Request"))
+		return
+	}
+	defer r.Body.Close()
+	userStatus, userFound := ur.Handler.GetUserById(ctx, userId)
+	switch userStatus {
+	case user.Success:
+		eventStatus, eventFound := eh.GetEventById(ctx, eventId)
+		switch eventStatus {
+		case events.Success:
+			status := ur.Handler.UserUnsubscribe(ctx, userFound, eventFound)
+			switch status {
+			case user.Success:
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("200: OK"))
+				return
+			case user.NotFound:
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte("404: User Not Found"))
+				return
+			case user.NotSuscripted:
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte("403: Not Suscripted"))
+				return
+			default:
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500: Internal Server Error"))
+				return
+			}
+		case events.NotFound:
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("404: Event Not Found"))
 			return
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
@@ -359,6 +419,7 @@ func (ur *UserRouter) Routes() http.Handler {
 
 	r.Post("/registUser", ur.UserRegistration)
 	r.Delete("/deleteUser", ur.DeleteUser)
+	r.Delete("/userUnsubscribe", ur.UserUnsubscribe)
 	r.Put("/updateUser", ur.UpdateUser)
 	r.Put("/userToAdmin", ur.UserToAdmin)
 	r.Put("/adminToUser", ur.AdminToUser)
