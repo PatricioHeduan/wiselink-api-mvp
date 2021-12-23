@@ -34,19 +34,31 @@ func (er *EventRouter) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("400:Bad Request"))
 		return
 	}
-	//Todo: check if the user is an administrator
-	createdEvent, status := er.Handler.CreateEvent(ctx, e)
-	if status == events.Success {
-		parsedEvent, err := json.Marshal(createdEvent)
-		if err != nil {
+	token := r.Header.Get("Authorization")
+	tokenStatus := uh.VerifyAdminExistance(ctx, token)
+	switch tokenStatus {
+	case user.Success:
+		createdEvent, status := er.Handler.CreateEvent(ctx, e)
+		if status == events.Success {
+			parsedEvent, err := json.Marshal(createdEvent)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500: Internal Server Error"))
+				return
+			}
+			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte(parsedEvent))
+			return
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("500: Internal Server Error"))
 			return
 		}
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(parsedEvent))
+	case user.NotFound:
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("401: Unauthorized"))
 		return
-	} else {
+	default:
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("500: Internal Server Error"))
 		return
@@ -63,19 +75,31 @@ func (er *EventRouter) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	//Todo: check if the user is an administrator
-	switch er.Handler.UpdateEvent(ctx, e) {
-	case events.Success:
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("200: OK"))
-		return
-	case events.NotFound:
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("404: Not Found"))
-		return
-	case events.InternalError:
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Server Error"))
+	token := r.Header.Get("Authorization")
+	tokenStatus := uh.VerifyAdminExistance(ctx, token)
+	switch tokenStatus {
+	case user.Success:
+		switch er.Handler.UpdateEvent(ctx, e) {
+		case events.Success:
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("200: OK"))
+			return
+		case events.NotFound:
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("404: Not Found"))
+			return
+		case events.InternalError:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		}
+	case user.NotFound:
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("401: Unauthorized"))
 		return
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
@@ -92,19 +116,31 @@ func (er *EventRouter) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("400: Bad Request"))
 	}
 	defer r.Body.Close()
-	//Todo: check if the user is an administrator
-	switch er.Handler.DeleteEvent(ctx, id) {
-	case events.Success:
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("200: Success"))
-		return
-	case events.NotFound:
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("404: Not Found"))
-		return
-	case events.InternalError:
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Server Error"))
+	token := r.Header.Get("Authorization")
+	tokenStatus := uh.VerifyAdminExistance(ctx, token)
+	switch tokenStatus {
+	case user.Success:
+		switch er.Handler.DeleteEvent(ctx, id) {
+		case events.Success:
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("200: Success"))
+			return
+		case events.NotFound:
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("404: Not Found"))
+			return
+		case events.InternalError:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		}
+	case user.NotFound:
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("401: Unauthorized"))
 		return
 	default:
 		w.WriteHeader(http.StatusInternalServerError)

@@ -77,19 +77,31 @@ func (ur *UserRouter) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("400: Bad Request"))
 		return
 	}
-	//Todo: check if the user is an administrator
-	switch ur.Handler.DeleteUser(ctx, id) {
+	token := r.Header.Get("Authorization")
+	tokenStatus := ur.Handler.VerifyAdminExistance(ctx, token)
+	switch tokenStatus {
 	case user.Success:
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("200: OK"))
-		return
+		switch ur.Handler.DeleteUser(ctx, id) {
+		case user.Success:
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("200: OK"))
+			return
+		case user.NotFound:
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("404: Not Found"))
+			return
+		case user.InternalError:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		}
 	case user.NotFound:
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404: Not Found"))
-		return
-	case user.InternalError:
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Server Error"))
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("401: Unauthorized"))
 		return
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
@@ -108,7 +120,6 @@ func (ur *UserRouter) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("400: Bad Request"))
 		return
 	}
-	//Todo: check if the user is an administrator
 	status, userFound := ur.Handler.GetUserById(ctx, u.Id)
 	switch status {
 	case user.Success:
@@ -152,13 +163,80 @@ func (ur *UserRouter) UserToAdmin(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("400: Bad Request"))
 		return
 	}
-	adminStatus, _ := ur.Handler.GetAdminByEmail(ctx, email)
-	switch adminStatus {
+	token := r.Header.Get("Authorization")
+	tokenStatus := ur.Handler.VerifyAdminExistance(ctx, token)
+	switch tokenStatus {
+	case user.Success:
+		adminStatus, _ := ur.Handler.GetAdminByEmail(ctx, email)
+		switch adminStatus {
+		case user.NotFound:
+			status, userToPromote := ur.Handler.GetByEmail(ctx, email)
+			switch status {
+			case user.Success:
+				switch ur.Handler.UserToAdmin(ctx, userToPromote) {
+				case user.Success:
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte("200: Success"))
+					return
+				case user.InternalError:
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte("500: Internal Server Error"))
+					return
+				default:
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte("500: Internal Server Error"))
+					return
+				}
+			case user.NotFound:
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte("404: Not Found"))
+				return
+			case user.InternalError:
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500: Internal Server Error"))
+				return
+			default:
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500: Internal Server Error"))
+				return
+			}
+		case user.Success:
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("401: Already Exists"))
+			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		}
 	case user.NotFound:
-		status, userToPromote := ur.Handler.GetByEmail(ctx, email)
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("401: Unauthorized"))
+		return
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+		return
+	}
+}
+
+func (ur *UserRouter) AdminToUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	email := r.URL.Query().Get("email")
+	defer r.Body.Close()
+	if email == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400: Bad Request"))
+		return
+	}
+	token := r.Header.Get("Authorization")
+	tokenStatus := ur.Handler.VerifyAdminExistance(ctx, token)
+	switch tokenStatus {
+	case user.Success:
+		status, adminToUser := ur.Handler.GetAdminByEmail(ctx, email)
 		switch status {
 		case user.Success:
-			switch ur.Handler.UserToAdmin(ctx, userToPromote) {
+			switch ur.Handler.AdminToUser(ctx, adminToUser) {
 			case user.Success:
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte("200: Success"))
@@ -185,50 +263,9 @@ func (ur *UserRouter) UserToAdmin(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("500: Internal Server Error"))
 			return
 		}
-	case user.Success:
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("401: Already Exists"))
-		return
-	default:
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Server Error"))
-		return
-	}
-}
-
-func (ur *UserRouter) AdminToUser(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	email := r.URL.Query().Get("email")
-	defer r.Body.Close()
-	if email == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400: Bad Request"))
-		return
-	}
-	status, adminToUser := ur.Handler.GetAdminByEmail(ctx, email)
-	switch status {
-	case user.Success:
-		switch ur.Handler.AdminToUser(ctx, adminToUser) {
-		case user.Success:
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("200: Success"))
-			return
-		case user.InternalError:
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("500: Internal Server Error"))
-			return
-		default:
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("500: Internal Server Error"))
-			return
-		}
 	case user.NotFound:
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404: Not Found"))
-		return
-	case user.InternalError:
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Server Error"))
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("401: Unauthorized"))
 		return
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
@@ -418,12 +455,15 @@ func (ur *UserRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 
 	r.Post("/registUser", ur.UserRegistration)
+
 	r.Delete("/deleteUser", ur.DeleteUser)
 	r.Delete("/userUnsubscribe", ur.UserUnsubscribe)
+
 	r.Put("/updateUser", ur.UpdateUser)
 	r.Put("/userToAdmin", ur.UserToAdmin)
 	r.Put("/adminToUser", ur.AdminToUser)
 	r.Put("/userInscription", ur.UserInscription)
+
 	r.Get("/login", ur.LoginUser)
 
 	return r
