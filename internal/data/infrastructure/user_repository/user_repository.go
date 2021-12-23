@@ -154,7 +154,7 @@ func (ur *UserRepository) VerifyAdminExistance(ctx context.Context, accessToken 
 
 func (ur *UserRepository) ModifyUserEvents(ctx context.Context, u user.User) int {
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")
-	_, err := usersCollection.UpdateOne(ctx, bson.M{"id": u.Id}, bson.M{"suscriptedTo": u.SuscriptedTo})
+	_, err := usersCollection.UpdateOne(ctx, bson.M{"id": u.Id}, bson.M{"$set": bson.M{"suscriptedTo": u.SuscriptedTo}})
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			return user.NotFound
