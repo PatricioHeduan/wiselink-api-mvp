@@ -33,7 +33,6 @@ func (ur *UserRepository) GetByEmail(ctx context.Context, email string) (int, us
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	err := usersCollection.FindOne(ctx, bson.M{"email": email}).Decode(&u)
 	if err != nil {
-		// error when no matching document is found
 		if err.Error() == "mongo: no documents in result" {
 			return user.NotFound, u
 		} else {
@@ -144,7 +143,7 @@ func (ur *UserRepository) VerifyAdminExistance(ctx context.Context, accessToken 
 	adminsCollection := ur.Client.Database("wlMVP").Collection("admins")
 	err := adminsCollection.FindOne(ctx, bson.M{"accesstoken": accessToken}).Decode(&a)
 	if err != nil {
-		if err.Error() == "mongo: no documents in result set" {
+		if err.Error() == "mongo: no documents in result" {
 			return user.NotFound
 		}
 		return user.InternalError
