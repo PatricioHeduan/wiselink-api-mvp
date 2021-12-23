@@ -92,10 +92,10 @@ func (ur *UserRepository) UpdateUser(ctx context.Context, u user.User, token str
 
 func (ur *UserRepository) GetLastAdminId(ctx context.Context) int {
 	var a user.Admin
-	eventsCollection := ur.Client.Database("wlMVP").Collection("Admins")
+	eventsCollection := ur.Client.Database("wlMVP").Collection("admins")
 	fo := options.FindOne()
 	fo.SetSort(bson.D{{"$natural", -1}})
-	err := eventsCollection.FindOne(ctx, nil, fo).Decode(&a)
+	err := eventsCollection.FindOne(ctx, bson.D{}, fo).Decode(&a)
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			return 0
@@ -116,7 +116,7 @@ func (ur *UserRepository) AddAdmin(ctx context.Context, a user.Admin) int {
 
 func (ur *UserRepository) DeleteAdmin(ctx context.Context, a user.Admin) int {
 	adminsCollection := ur.Client.Database("wlMVP").Collection("admins")
-	_, err := adminsCollection.DeleteOne(ctx, bson.M{"accessToken": a.AccessToken})
+	_, err := adminsCollection.DeleteOne(ctx, bson.M{"accesstoken": a.AccessToken})
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			return user.NotFound
@@ -142,7 +142,7 @@ func (ur *UserRepository) GetAdminByEmail(ctx context.Context, email string) (in
 func (ur *UserRepository) VerifyAdminExistance(ctx context.Context, accessToken string) int {
 	var a user.Admin
 	adminsCollection := ur.Client.Database("wlMVP").Collection("admins")
-	err := adminsCollection.FindOne(ctx, bson.M{"accessToken": accessToken}).Decode(&a)
+	err := adminsCollection.FindOne(ctx, bson.M{"accesstoken": accessToken}).Decode(&a)
 	if err != nil {
 		if err.Error() == "mongo: no documents in result set" {
 			return user.NotFound
@@ -154,7 +154,7 @@ func (ur *UserRepository) VerifyAdminExistance(ctx context.Context, accessToken 
 
 func (ur *UserRepository) ModifyUserEvents(ctx context.Context, u user.User) int {
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")
-	_, err := usersCollection.UpdateOne(ctx, bson.M{"id": u.Id}, bson.M{"$set": bson.M{"suscriptedTo": u.SuscriptedTo}})
+	_, err := usersCollection.UpdateOne(ctx, bson.M{"id": u.Id}, bson.M{"$set": bson.M{"suscriptedto": u.SuscriptedTo}})
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			return user.NotFound

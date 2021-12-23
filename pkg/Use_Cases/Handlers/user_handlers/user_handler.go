@@ -70,6 +70,9 @@ func (uh *UserHandler) UpdateUser(ctx context.Context, u, foundUser user.User) i
 
 func (uh *UserHandler) UserToAdmin(ctx context.Context, u user.User) int {
 	lastId := helpers.GetAdminLastId(ctx, uh.Repository)
+	if lastId == -1 {
+		return user.InternalError
+	}
 	a := user.Admin{
 		Id:          lastId,
 		Email:       u.Email,
