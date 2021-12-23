@@ -97,9 +97,9 @@ func (er *EventsRepository) GetEvents(ctx context.Context) (int, []events.Event)
 func (er *EventsRepository) GetEventById(ctx context.Context, id int) (int, events.Event) {
 	var e events.Event
 	eventsCollection := er.Client.Database("wlMVP").Collection("events")
-	err := eventsCollection.FindOne(ctx, bson.M{"Id": id}).Decode(&e)
+	err := eventsCollection.FindOne(ctx, bson.M{"id": id}).Decode(&e)
 	if err != nil {
-		if err.Error() == "mongo: no documents in result set" {
+		if err.Error() == "mongo: no documents in result" {
 			return events.NotFound, e
 		}
 		return user.InternalError, e

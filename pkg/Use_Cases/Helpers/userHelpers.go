@@ -12,6 +12,7 @@ func GetUserLastId(ctx context.Context, repository user_repository.UserRepositor
 	}
 	return id + 1
 }
+
 func GetAdminLastId(ctx context.Context, repository user_repository.UserRepositoryI) int {
 	id := repository.GetLastAdminId(ctx)
 	if id == -1 {

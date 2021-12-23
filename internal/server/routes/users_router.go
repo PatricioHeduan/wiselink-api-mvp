@@ -48,6 +48,14 @@ func (ur *UserRouter) UserRegistration(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusCreated)
 			w.Write(parsedUser)
 			return
+		case user.NotFound:
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("404: Not Found"))
+			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
 		}
 	case user.Success:
 		w.WriteHeader(http.StatusUnauthorized)
@@ -62,15 +70,15 @@ func (ur *UserRouter) UserRegistration(w http.ResponseWriter, r *http.Request) {
 
 func (ur *UserRouter) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	email := r.URL.Query().Get("email")
+	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	defer r.Body.Close()
-	if email == "" {
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400: Bad Request"))
 		return
 	}
 	//Todo: check if the user is an administrator
-	switch ur.Handler.DeleteUser(ctx, email) {
+	switch ur.Handler.DeleteUser(ctx, id) {
 	case user.Success:
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("200: OK"))
@@ -89,6 +97,7 @@ func (ur *UserRouter) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
 func (ur *UserRouter) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var u user.User
 	ctx := r.Context()
@@ -100,18 +109,32 @@ func (ur *UserRouter) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//Todo: check if the user is an administrator
-	switch ur.Handler.UpdateUser(ctx, u) {
+	status, userFound := ur.Handler.GetUserById(ctx, u.Id)
+	switch status {
 	case user.Success:
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("200: OK"))
-		return
+		if userFound.Email == u.Email {
+			switch ur.Handler.UpdateUser(ctx, u, userFound) {
+			case user.Success:
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("200: OK"))
+				return
+			case user.NotFound:
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte("404: Not Found"))
+				return
+			default:
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500: Internal Server Error"))
+				return
+			}
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("401: Email not matching"))
+			return
+		}
 	case user.NotFound:
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404: Not Found"))
-		return
-	case user.InternalError:
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Server Error"))
+		w.Write([]byte("404: User Not Found"))
 		return
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
@@ -119,6 +142,7 @@ func (ur *UserRouter) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
 func (ur *UserRouter) UserToAdmin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	email := r.URL.Query().Get("email")
@@ -128,13 +152,29 @@ func (ur *UserRouter) UserToAdmin(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("400: Bad Request"))
 		return
 	}
-	status, userToPromote := ur.Handler.GetByEmail(ctx, email)
-	switch status {
-	case user.Success:
-		switch ur.Handler.UserToAdmin(ctx, userToPromote) {
+	adminStatus, _ := ur.Handler.GetAdminByEmail(ctx, email)
+	switch adminStatus {
+	case user.NotFound:
+		status, userToPromote := ur.Handler.GetByEmail(ctx, email)
+		switch status {
 		case user.Success:
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("200: Success"))
+			switch ur.Handler.UserToAdmin(ctx, userToPromote) {
+			case user.Success:
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("200: Success"))
+				return
+			case user.InternalError:
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500: Internal Server Error"))
+				return
+			default:
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500: Internal Server Error"))
+				return
+			}
+		case user.NotFound:
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("404: Not Found"))
 			return
 		case user.InternalError:
 			w.WriteHeader(http.StatusInternalServerError)
@@ -145,13 +185,9 @@ func (ur *UserRouter) UserToAdmin(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("500: Internal Server Error"))
 			return
 		}
-	case user.NotFound:
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404: Not Found"))
-		return
-	case user.InternalError:
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Server Error"))
+	case user.Success:
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("401: Already Exists"))
 		return
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
@@ -321,9 +357,9 @@ func (ur *UserRouter) LoginUser(w http.ResponseWriter, r *http.Request) {
 func (ur *UserRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 
-	r.Post("/", ur.UserRegistration)
-	r.Delete("/", ur.DeleteUser)
-	r.Put("/", ur.UpdateUser)
+	r.Post("/registUser", ur.UserRegistration)
+	r.Delete("/deleteUser", ur.DeleteUser)
+	r.Put("/updateUser", ur.UpdateUser)
 	r.Put("/userToAdmin", ur.UserToAdmin)
 	r.Put("/adminToUser", ur.AdminToUser)
 	r.Put("/userInscription", ur.UserInscription)
