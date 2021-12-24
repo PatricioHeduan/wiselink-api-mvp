@@ -311,7 +311,7 @@ func (ur *UserRouter) UserInscription(w http.ResponseWriter, r *http.Request) {
 				return
 			case user.CantEnroll:
 				w.WriteHeader(http.StatusConflict)
-				w.Write([]byte("409: Conflict"))
+				w.Write([]byte("409: Conflict: Cant Enroll"))
 				return
 			case user.AlreadyInscripted:
 				w.WriteHeader(http.StatusAlreadyReported)
@@ -451,6 +451,45 @@ func (ur *UserRouter) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (ur *UserRouter) GetInscriptedEvents(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	defer r.Body.Close()
+	filter := r.URL.Query().Get("filter")
+	if filter != "activo" && filter != "completado" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400: Bad Request"))
+		return
+	}
+	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400: Bad Request"))
+		return
+	}
+	userStatus, userFound := ur.Handler.GetUserById(ctx, id)
+	switch userStatus {
+	case user.Success:
+		userInscriptions := ur.Handler.GetInscriptedEvents(ctx, filter, userFound, eh)
+		inscriptionsParsed, err := json.Marshal(userInscriptions)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write(inscriptionsParsed)
+		return
+	case user.NotFound:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404: User Not Found"))
+		return
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+		return
+	}
+}
+
 func (ur *UserRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 
@@ -465,6 +504,7 @@ func (ur *UserRouter) Routes() http.Handler {
 	r.Put("/userInscription", ur.UserInscription)
 
 	r.Get("/login", ur.LoginUser)
+	r.Get("/inscriptedEvents", ur.GetInscriptedEvents)
 
 	return r
 }
