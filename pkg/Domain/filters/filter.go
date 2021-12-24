@@ -1,7 +1,7 @@
 package filters
 
 type Filter struct {
-	Date   string `json:"time"`
+	Date   string `json:"date"`
 	Status string `json:"status"`
 	Title  string `json:"title"`
 }

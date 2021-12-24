@@ -6,6 +6,7 @@ import (
 	"wiselink/internal/data/infrastructure/user_repository"
 	"wiselink/pkg/Domain/events"
 	"wiselink/pkg/Domain/user"
+	events_handler "wiselink/pkg/Use_Cases/Handlers/events_handlers"
 	helpers "wiselink/pkg/Use_Cases/Helpers"
 
 	"golang.org/x/crypto/bcrypt"
@@ -27,6 +28,7 @@ type UserHandlerI interface {
 	GetUserById(ctx context.Context, id int) (int, user.User)
 	LoginUser(ctx context.Context, u user.User, token string) int
 	UserUnsubscribe(ctx context.Context, u user.User, e events.Event) int
+	GetInscriptedEvents(ctx context.Context, filter string, u user.User, e events_handler.EventsHandlerI) []events.Event
 }
 
 const (
@@ -142,4 +144,24 @@ func (uh *UserHandler) UserUnsubscribe(ctx context.Context, u user.User, e event
 	}
 	u.SuscriptedTo = append(u.SuscriptedTo[:found], u.SuscriptedTo[found+1:]...)
 	return uh.Repository.ModifyUserEvents(ctx, u)
+}
+
+func (uh *UserHandler) GetInscriptedEvents(ctx context.Context, filter string, u user.User, e events_handler.EventsHandlerI) []events.Event {
+	var eventsInscripted []events.Event
+	for _, eventId := range u.SuscriptedTo {
+		_, event := e.GetEventById(ctx, eventId)
+		eventDateTime, _ := time.Parse(dateAndHourFormat, event.Date+" at "+event.Hour)
+		if event.Status {
+			if filter == "activo" {
+				if time.Now().Before(eventDateTime) {
+					eventsInscripted = append(eventsInscripted, event)
+				}
+			} else {
+				if eventDateTime.Before(time.Now()) {
+					eventsInscripted = append(eventsInscripted, event)
+				}
+			}
+		}
+	}
+	return eventsInscripted
 }
