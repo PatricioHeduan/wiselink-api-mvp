@@ -12,9 +12,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	//Ejecutamos de forma concurrente el servidor
-
 	serv.Start()
 
 }

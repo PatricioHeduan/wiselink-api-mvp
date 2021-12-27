@@ -13,6 +13,7 @@ import (
 type EventsRepository struct {
 	Client *mongo.Client
 }
+
 type EventsRepositoryI interface {
 	FindLastId(ctx context.Context) int
 	CreateEvent(ctx context.Context, e events.Event) int
@@ -37,6 +38,7 @@ func (er *EventsRepository) FindLastId(ctx context.Context) int {
 	}
 	return e.Id
 }
+
 func (er *EventsRepository) CreateEvent(ctx context.Context, e events.Event) int {
 	eventsCollection := er.Client.Database("wlMVP").Collection("events")
 	_, err := eventsCollection.InsertOne(ctx, e)

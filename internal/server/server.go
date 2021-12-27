@@ -19,23 +19,19 @@ type Server struct {
 func New(port string) (*Server, error) {
 	//Estructura que funciona de mux
 	r := chi.NewRouter()
-
 	//Se monta como raiz la direccion "api"
 	r.Mount("/api", routes.New())
-
 	serv := &http.Server{
 		Addr:         ":" + port,
 		Handler:      r,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
-
 	//Construimos un server inicializado con el que acabamos de crear
 	server := Server{server: serv}
 	return &server, nil
 }
 
 func (serv *Server) Start() {
-	//log.Printf("Servidor corriendo en " + os.Getenv("PORT"))
 	log.Fatal(serv.server.ListenAndServe())
 }

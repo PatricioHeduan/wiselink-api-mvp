@@ -35,7 +35,9 @@ func New() http.Handler {
 			},
 		},
 	}
+
 	r.Mount("/events", er.Routes())
 	r.Mount("/users", ur.Routes())
+
 	return r
 }

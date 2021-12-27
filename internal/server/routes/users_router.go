@@ -48,10 +48,6 @@ func (ur *UserRouter) UserRegistration(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusCreated)
 			w.Write(parsedUser)
 			return
-		case user.NotFound:
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("404: Not Found"))
-			return
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("500: Internal Server Error"))
@@ -68,11 +64,60 @@ func (ur *UserRouter) UserRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (ur *UserRouter) LoginUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var u user.User
+	err := json.NewDecoder(r.Body).Decode(&u)
+	defer r.Body.Close()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400: Bad Request"))
+		return
+	}
+	status, userFound := ur.Handler.GetByEmail(ctx, u.Email)
+	switch status {
+	case user.Success:
+		loginStatus := ur.Handler.LoginUser(ctx, u, userFound.AccessToken)
+		switch loginStatus {
+		case user.Success:
+			parsedUser, err := json.Marshal(userFound)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500: Internal Server Error"))
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			w.Write(parsedUser)
+			return
+		case user.IncorectPassword:
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("401: Incorrect Password"))
+			return
+		case user.NotFound:
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("404: Not Found"))
+			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500: Internal Server Error"))
+			return
+		}
+	case user.NotFound:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404:Not Found"))
+		return
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500: Internal Server Error"))
+		return
+	}
+}
+
 func (ur *UserRouter) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	defer r.Body.Close()
-	if err != nil {
+	if err != nil || id <= 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400: Bad Request"))
 		return
@@ -311,7 +356,7 @@ func (ur *UserRouter) UserInscription(w http.ResponseWriter, r *http.Request) {
 				return
 			case user.CantEnroll:
 				w.WriteHeader(http.StatusConflict)
-				w.Write([]byte("409: Conflict: Cant Enroll"))
+				w.Write([]byte("409: Conflict: Can't Enroll"))
 				return
 			case user.AlreadyInscripted:
 				w.WriteHeader(http.StatusAlreadyReported)
@@ -394,55 +439,6 @@ func (ur *UserRouter) UserUnsubscribe(w http.ResponseWriter, r *http.Request) {
 	case user.NotFound:
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("404: User Not Found"))
-		return
-	default:
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500: Internal Server Error"))
-		return
-	}
-}
-
-func (ur *UserRouter) LoginUser(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	var u user.User
-	err := json.NewDecoder(r.Body).Decode(&u)
-	defer r.Body.Close()
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400: Bad Request"))
-		return
-	}
-	status, userFound := ur.Handler.GetByEmail(ctx, u.Email)
-	switch status {
-	case user.Success:
-		loginStatus := ur.Handler.LoginUser(ctx, u, userFound.AccessToken)
-		switch loginStatus {
-		case user.Success:
-			parsedUser, err := json.Marshal(userFound)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("500: Internal Server Error"))
-				return
-			}
-			w.WriteHeader(http.StatusOK)
-			w.Write(parsedUser)
-			return
-		case user.IncorectPassword:
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("401: Incorrect Password"))
-			return
-		case user.NotFound:
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("404: Not Found"))
-			return
-		default:
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("500: Internal Server Error"))
-			return
-		}
-	case user.NotFound:
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404:Not Found"))
 		return
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
