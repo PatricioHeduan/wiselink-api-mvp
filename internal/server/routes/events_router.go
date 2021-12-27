@@ -200,6 +200,7 @@ func (er *EventRouter) GetEvents(w http.ResponseWriter, r *http.Request) {
 func (er *EventRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 
+	//http paths and methods to execute
 	r.Post("/creteEvent", er.CreateEvent)
 
 	r.Put("/updateEvent", er.UpdateEvent)
