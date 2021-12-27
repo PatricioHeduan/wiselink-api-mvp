@@ -11,6 +11,7 @@ import (
 type EventsHandler struct {
 	Repository events_repository.EventsRepositoryI
 }
+
 type EventsHandlerI interface {
 	CreateEvent(ctx context.Context, e events.Event) (events.Event, int)
 	UpdateEvent(ctx context.Context, e events.Event) int

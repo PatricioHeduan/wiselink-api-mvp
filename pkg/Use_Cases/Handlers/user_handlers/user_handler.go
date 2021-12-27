@@ -15,6 +15,7 @@ import (
 type UserHandler struct {
 	Repository user_repository.UserRepositoryI
 }
+
 type UserHandlerI interface {
 	GetByEmail(ctx context.Context, email string) (int, user.User)
 	UserRegistration(ctx context.Context, u user.User) (int, user.User)
