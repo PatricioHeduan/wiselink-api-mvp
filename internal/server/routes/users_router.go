@@ -48,10 +48,6 @@ func (ur *UserRouter) UserRegistration(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusCreated)
 			w.Write(parsedUser)
 			return
-		case user.NotFound:
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("404: Not Found"))
-			return
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("500: Internal Server Error"))
@@ -72,7 +68,7 @@ func (ur *UserRouter) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	defer r.Body.Close()
-	if err != nil {
+	if err != nil || id <= 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400: Bad Request"))
 		return
@@ -311,7 +307,7 @@ func (ur *UserRouter) UserInscription(w http.ResponseWriter, r *http.Request) {
 				return
 			case user.CantEnroll:
 				w.WriteHeader(http.StatusConflict)
-				w.Write([]byte("409: Conflict: Cant Enroll"))
+				w.Write([]byte("409: Conflict: Can't Enroll"))
 				return
 			case user.AlreadyInscripted:
 				w.WriteHeader(http.StatusAlreadyReported)

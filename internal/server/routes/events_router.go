@@ -111,7 +111,7 @@ func (er *EventRouter) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 func (er *EventRouter) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
-	if err != nil {
+	if err != nil || id <= 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400: Bad Request"))
 	}
@@ -206,7 +206,7 @@ func (er *EventRouter) Routes() http.Handler {
 
 	r.Delete("/deleteEvent", er.DeleteEvent)
 
-	r.Get("/getAllEvents", er.GetEvents)
+	r.Get("/getEvents", er.GetEvents)
 
 	return r
 }

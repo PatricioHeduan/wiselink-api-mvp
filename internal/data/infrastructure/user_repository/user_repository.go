@@ -13,6 +13,7 @@ import (
 type UserRepository struct {
 	Client *mongo.Client
 }
+
 type UserRepositoryI interface {
 	GetByEmail(ctx context.Context, email string) (int, user.User)
 	FindUserLastId(ctx context.Context) int
@@ -42,6 +43,7 @@ func (ur *UserRepository) GetByEmail(ctx context.Context, email string) (int, us
 		return user.Success, u
 	}
 }
+
 func (ur *UserRepository) FindUserLastId(ctx context.Context) int {
 	var u user.User
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")
@@ -66,6 +68,7 @@ func (ur *UserRepository) CreateUser(ctx context.Context, u user.User) int {
 	}
 	return events.Success
 }
+
 func (ur *UserRepository) DeleteUser(ctx context.Context, id int) int {
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	_, err := usersCollection.DeleteOne(ctx, bson.M{"id": id})
@@ -77,6 +80,7 @@ func (ur *UserRepository) DeleteUser(ctx context.Context, id int) int {
 	}
 	return user.Success
 }
+
 func (ur *UserRepository) UpdateUser(ctx context.Context, u user.User, token string) int {
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	_, err := usersCollection.UpdateOne(ctx, bson.M{"id": u.Id}, bson.M{"$set": bson.M{"name": u.Name, "accesstoken": token}})
