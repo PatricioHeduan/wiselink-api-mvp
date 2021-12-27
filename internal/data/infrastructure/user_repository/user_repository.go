@@ -29,6 +29,7 @@ type UserRepositoryI interface {
 	GetUserById(ctx context.Context, id int) (int, user.User)
 }
 
+//Method to get a user from id an email from the database
 func (ur *UserRepository) GetByEmail(ctx context.Context, email string) (int, user.User) {
 	var u user.User
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")
@@ -44,6 +45,7 @@ func (ur *UserRepository) GetByEmail(ctx context.Context, email string) (int, us
 	}
 }
 
+//Method to get the last user id from the database
 func (ur *UserRepository) FindUserLastId(ctx context.Context) int {
 	var u user.User
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")
@@ -60,6 +62,7 @@ func (ur *UserRepository) FindUserLastId(ctx context.Context) int {
 	return u.Id
 }
 
+//Method to add a single user to the database
 func (ur *UserRepository) CreateUser(ctx context.Context, u user.User) int {
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	_, err := usersCollection.InsertOne(ctx, u)
@@ -69,6 +72,7 @@ func (ur *UserRepository) CreateUser(ctx context.Context, u user.User) int {
 	return events.Success
 }
 
+//Method to delete a single user from the database
 func (ur *UserRepository) DeleteUser(ctx context.Context, id int) int {
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	_, err := usersCollection.DeleteOne(ctx, bson.M{"id": id})
@@ -81,6 +85,7 @@ func (ur *UserRepository) DeleteUser(ctx context.Context, id int) int {
 	return user.Success
 }
 
+//Method to modify a single user from the database
 func (ur *UserRepository) UpdateUser(ctx context.Context, u user.User, token string) int {
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	_, err := usersCollection.UpdateOne(ctx, bson.M{"id": u.Id}, bson.M{"$set": bson.M{"name": u.Name, "accesstoken": token}})
@@ -93,6 +98,7 @@ func (ur *UserRepository) UpdateUser(ctx context.Context, u user.User, token str
 	return user.Success
 }
 
+//Method to get the last admin id from the database
 func (ur *UserRepository) GetLastAdminId(ctx context.Context) int {
 	var a user.Admin
 	eventsCollection := ur.Client.Database("wlMVP").Collection("admins")
@@ -108,6 +114,7 @@ func (ur *UserRepository) GetLastAdminId(ctx context.Context) int {
 	return a.Id
 }
 
+//Method to add a single admin to the database
 func (ur *UserRepository) AddAdmin(ctx context.Context, a user.Admin) int {
 	adminsCollection := ur.Client.Database("wlMVP").Collection("admins")
 	_, err := adminsCollection.InsertOne(ctx, a)
@@ -117,6 +124,7 @@ func (ur *UserRepository) AddAdmin(ctx context.Context, a user.Admin) int {
 	return events.Success
 }
 
+//Method to delete a single admin from the database
 func (ur *UserRepository) DeleteAdmin(ctx context.Context, a user.Admin) int {
 	adminsCollection := ur.Client.Database("wlMVP").Collection("admins")
 	_, err := adminsCollection.DeleteOne(ctx, bson.M{"accesstoken": a.AccessToken})
@@ -129,6 +137,7 @@ func (ur *UserRepository) DeleteAdmin(ctx context.Context, a user.Admin) int {
 	return user.Success
 }
 
+//Method to get a single admin from an email from the database
 func (ur *UserRepository) GetAdminByEmail(ctx context.Context, email string) (int, user.Admin) {
 	var a user.Admin
 	adminsCollection := ur.Client.Database("wlMVP").Collection("admins")
@@ -142,6 +151,7 @@ func (ur *UserRepository) GetAdminByEmail(ctx context.Context, email string) (in
 	return user.Success, a
 }
 
+//Method to get a single admin from an accessToken from the database
 func (ur *UserRepository) VerifyAdminExistance(ctx context.Context, accessToken string) int {
 	var a user.Admin
 	adminsCollection := ur.Client.Database("wlMVP").Collection("admins")
@@ -155,6 +165,7 @@ func (ur *UserRepository) VerifyAdminExistance(ctx context.Context, accessToken 
 	return user.Success
 }
 
+//Method to modify the users inscriptions in the database
 func (ur *UserRepository) ModifyUserEvents(ctx context.Context, u user.User) int {
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")
 	_, err := usersCollection.UpdateOne(ctx, bson.M{"id": u.Id}, bson.M{"$set": bson.M{"suscriptedto": u.SuscriptedTo}})
@@ -167,6 +178,7 @@ func (ur *UserRepository) ModifyUserEvents(ctx context.Context, u user.User) int
 	return user.Success
 }
 
+//Method to get a single user from an id from the database
 func (ur *UserRepository) GetUserById(ctx context.Context, id int) (int, user.User) {
 	var u user.User
 	usersCollection := ur.Client.Database("wlMVP").Collection("users")

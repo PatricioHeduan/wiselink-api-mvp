@@ -23,6 +23,7 @@ type EventsRepositoryI interface {
 	GetEventById(ctx context.Context, id int) (int, events.Event)
 }
 
+//Method to found event last id in database
 func (er *EventsRepository) FindLastId(ctx context.Context) int {
 	var e events.Event
 	eventsCollection := er.Client.Database("wlMVP").Collection("events")
@@ -39,6 +40,7 @@ func (er *EventsRepository) FindLastId(ctx context.Context) int {
 	return e.Id
 }
 
+//Method to create an event and put it in database
 func (er *EventsRepository) CreateEvent(ctx context.Context, e events.Event) int {
 	eventsCollection := er.Client.Database("wlMVP").Collection("events")
 	_, err := eventsCollection.InsertOne(ctx, e)
@@ -49,6 +51,7 @@ func (er *EventsRepository) CreateEvent(ctx context.Context, e events.Event) int
 
 }
 
+//Method to update an event in database
 func (er *EventsRepository) UpdateEvent(ctx context.Context, e events.Event) int {
 	eventsCollection := er.Client.Database("wlMVP").Collection("events")
 	_, err := eventsCollection.UpdateOne(ctx, bson.M{"id": e.Id}, bson.M{"$set": e})
@@ -62,6 +65,7 @@ func (er *EventsRepository) UpdateEvent(ctx context.Context, e events.Event) int
 	return events.Success
 }
 
+//Method to delete an event in database
 func (er *EventsRepository) DeleteEvent(ctx context.Context, id int) int {
 	eventsCollection := er.Client.Database("wlMVP").Collection("events")
 	_, err := eventsCollection.DeleteOne(ctx, bson.M{"id": id})
@@ -75,6 +79,7 @@ func (er *EventsRepository) DeleteEvent(ctx context.Context, id int) int {
 	return events.Success
 }
 
+//Method to get all events from the database
 func (er *EventsRepository) GetEvents(ctx context.Context) (int, []events.Event) {
 	eventsCollection := er.Client.Database("wlMVP").Collection("events")
 	result, err := eventsCollection.Find(ctx, bson.M{})
@@ -96,6 +101,7 @@ func (er *EventsRepository) GetEvents(ctx context.Context) (int, []events.Event)
 	return events.Success, eventSlice
 }
 
+//Method to get a single event from an id from the database
 func (er *EventsRepository) GetEventById(ctx context.Context, id int) (int, events.Event) {
 	var e events.Event
 	eventsCollection := er.Client.Database("wlMVP").Collection("events")

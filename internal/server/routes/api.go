@@ -36,6 +36,7 @@ func New() http.Handler {
 		},
 	}
 
+	//Mount 2 diferent paths from 2 diferents http topics
 	r.Mount("/events", er.Routes())
 	r.Mount("/users", ur.Routes())
 

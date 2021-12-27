@@ -489,6 +489,7 @@ func (ur *UserRouter) GetInscriptedEvents(w http.ResponseWriter, r *http.Request
 func (ur *UserRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 
+	//http paths and methods to execute
 	r.Post("/registUser", ur.UserRegistration)
 
 	r.Delete("/deleteUser", ur.DeleteUser)

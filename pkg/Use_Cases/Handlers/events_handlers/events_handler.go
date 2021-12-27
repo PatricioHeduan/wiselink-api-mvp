@@ -20,6 +20,7 @@ type EventsHandlerI interface {
 	GetEventById(ctx context.Context, id int) (int, events.Event)
 }
 
+//Method to create an event or return to router if an error ocurrs
 func (eh *EventsHandler) CreateEvent(ctx context.Context, e events.Event) (events.Event, int) {
 	id := eh.Repository.FindLastId(ctx)
 	if id > -1 {
@@ -29,14 +30,17 @@ func (eh *EventsHandler) CreateEvent(ctx context.Context, e events.Event) (event
 	return e, events.InternalError
 }
 
+//Method to update an event or return to router if an error ocurrs
 func (eh *EventsHandler) UpdateEvent(ctx context.Context, e events.Event) int {
 	return eh.Repository.UpdateEvent(ctx, e)
 }
 
+//Method to Delete an event or return to router if an error ocurrs
 func (eh *EventsHandler) DeleteEvent(ctx context.Context, id int) int {
 	return eh.Repository.DeleteEvent(ctx, id)
 }
 
+//Method to get events given a filter and if user getting the events is or not an admin
 func (eh *EventsHandler) GetEvents(ctx context.Context, admin bool, filter filters.Filter) (int, []events.Event) {
 	status, eventSlice := eh.Repository.GetEvents(ctx)
 	if status != events.Success {
@@ -57,6 +61,7 @@ func (eh *EventsHandler) GetEvents(ctx context.Context, admin bool, filter filte
 	return events.Success, eventsReturn
 }
 
+//Method to get an event from an Id
 func (eh *EventsHandler) GetEventById(ctx context.Context, id int) (int, events.Event) {
 	return eh.Repository.GetEventById(ctx, id)
 }
