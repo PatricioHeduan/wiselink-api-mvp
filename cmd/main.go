@@ -12,7 +12,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//Ejecutamos de forma concurrente el servidor
+	//Ejecutamos de forma concurrente el servidor en el puerto 8080
 	serv.Start()
-
 }

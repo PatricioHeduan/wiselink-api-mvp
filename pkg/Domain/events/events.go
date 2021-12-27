@@ -5,9 +5,9 @@ type Event struct {
 	Title     string `json:"title" ,bson:"title"`
 	ShortD    string `json:"shortD" ,bson:"shortD"`
 	LongD     string `json:"longD" ,bson:"longD"`
-	Date      string `json:"date" ,bson:"date"`
-	Hour      string `json:"hour" ,bson:"hour"`
+	Date      string `json:"date" ,bson:"date"` //formato "dd-mm-aaaa"
+	Hour      string `json:"hour" ,bson:"hour"` //formato "hh:mm"
 	Organizer string `json:"organizer" ,bson:"organizer"`
 	Place     string `json:"place" ,bson:"place"`
-	Status    bool   `json:"status" ,bson:"status"`
+	Status    bool   `json:"status" ,bson:"status"` //publicado true o borrador false
 }
